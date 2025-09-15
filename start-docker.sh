@@ -29,6 +29,30 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
+timeout() {
+    local duration="$1"
+    shift
+    perl -e '
+        $timeout = shift;
+        $pid = fork();
+        if ($pid == 0) {
+            exec @ARGV;
+        }
+        else {
+            eval {
+                local $SIG{ALRM} = sub { die "timeout\n" };
+                alarm($timeout);
+                waitpid($pid, 0);
+                alarm(0);
+            };
+            if ($@ && $@ =~ /timeout/) {
+                kill 9, $pid;
+                print STDERR "Command timed out after $timeout seconds\n";
+                exit 124;
+            }
+        }
+    ' "$duration" "$@"
+}
 # Check if Docker is installed
 check_docker() {
     if ! command -v docker &> /dev/null; then
@@ -113,6 +137,9 @@ wait_for_health() {
     
     # Wait for PostgreSQL
     print_status "Waiting for PostgreSQL to be ready..."
+    # Cross-shell timeout function (works in bash and zsh)
+    
+
     timeout 60 bash -c 'until docker exec memmachine-postgres pg_isready -U memmachine -d memmachine; do sleep 2; done'
     print_success "PostgreSQL is ready"
     
