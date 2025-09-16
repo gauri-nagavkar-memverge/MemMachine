@@ -51,7 +51,7 @@ with st.sidebar:
     st.markdown("#### Choose user persona")
     selected_persona = st.selectbox(
         "Choose user persona",
-        ["Charlie", "Jing", "Charles", "Control"],
+        ["", "Charlie", "Jing", "Charles", "Control"],
         label_visibility="collapsed",
     )
     custom_persona = st.text_input("Or enter your name", "")

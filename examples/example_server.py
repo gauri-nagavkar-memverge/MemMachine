@@ -1,11 +1,12 @@
 import os
 import requests
 from datetime import datetime
+from urllib.parse import urljoin
 from fastapi import FastAPI
 from default_query_constructor import DefaultQueryConstructor
 
 # Configuration
-MEMORY_BACKEND_URL = os.getenv("MEMORY_BACKEND_URL", "http://localhost:8080")
+MEMORY_BACKEND_URL = os.getenv("MEMORY_BACKEND_URL", "http://memmachine:8080")
 EXAMPLE_SERVER_PORT = int(os.getenv("EXAMPLE_SERVER_PORT", "8000"))
 
 app = FastAPI(title="Server", description="Simple middleware")
@@ -34,9 +35,8 @@ async def store_data(user_id: str, query: str):
                 "type": "message",
             },
         }
-
         response = requests.post(
-            f"{MEMORY_BACKEND_URL}/v1/memories", json=episode_data, timeout=1000
+            "http://memmachine:8080/v1/memories", json=episode_data, timeout=1000
         )
         response.raise_for_status()
         return {"status": "success", "data": response.json()}
@@ -64,7 +64,7 @@ async def get_data(query: str, user_id: str, timestamp: str):
         print(f"DEBUG: Search data: {search_data}")
 
         response = requests.post(
-            f"{MEMORY_BACKEND_URL}/v1/memories/search", json=search_data, timeout=1000
+           "http://memmachine:8080/v1/memories/search", json=search_data, timeout=1000
         )
 
         print(f"DEBUG: Response status: {response.status_code}")
@@ -138,9 +138,9 @@ async def store_and_search_data(user_id: str, query: str):
                 "type": "message",
             },
         }
-
+        print("DEBUG: Teststring - store_and_search_data called")
         resp = requests.post(
-            f"{MEMORY_BACKEND_URL}/v1/memories", json=episode_data, timeout=1000
+            "http://memmachine:8080/v1/memories", json=episode_data, timeout=1000
         )
 
         print(f"DEBUG: Store-and-search response status: {resp.status_code}")
@@ -159,7 +159,7 @@ async def store_and_search_data(user_id: str, query: str):
         }
 
         search_resp = requests.post(
-            f"{MEMORY_BACKEND_URL}/v1/memories/search", json=search_data, timeout=1000
+           "http://memmachine:8080/v1/memories/search", json=search_data, timeout=1000
         )
 
         print(f"DEBUG: Store-and-search response status: {search_resp.status_code}")
@@ -211,5 +211,5 @@ async def store_and_search_data(user_id: str, query: str):
 
 if __name__ == "__main__":
     import uvicorn
-
+    
     uvicorn.run(app, host="0.0.0.0", port=EXAMPLE_SERVER_PORT)

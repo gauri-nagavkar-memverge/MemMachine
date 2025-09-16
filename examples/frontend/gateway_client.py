@@ -2,7 +2,7 @@ import os
 import requests
 from datetime import datetime
 
-EXAMPLE_SERVER_PORT = os.getenv("EXAMPLE_SERVER_PORT", "http://localhost:8000")
+EXAMPLE_SERVER_PORT = os.getenv("EXAMPLE_SERVER_PORT", "http://middleware:8000")
 
 
 def ingest_and_rewrite(user_id: str, query: str, model_type: str = "openai") -> str:
