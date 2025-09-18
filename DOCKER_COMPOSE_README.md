@@ -11,6 +11,7 @@ Copy the example environment file and add your OpenAI API key:
 ```bash
 cp sample_configs/env.docercompose .env
 # Edit .env and add your OPENAI_API_KEY
+
 ```
 
 ### 2. Configure MemMachine
@@ -103,7 +104,54 @@ Key files:
 - `docker-compose.yml` - Service definitions
 - `start-docker.sh` - Startup script
 
-### ⚠️ Important Configuration Notes
+## OpenWebUI config
+
+Once OpenWebUI is up and running, create an admin account.
+
+### Admin Panel
+
+Open the Admin Panel.
+
+![admin-panel](docs/images/admin-panel.png)
+
+#### Filter Function
+
+Head to *Functions* in the top menue.
+
+![admin-functions](docs/images/admin-functions.png)
+
+Copy the content of the [filter.py](./examples/functions/filter.py) file and paste it into a new function under the *Admin Panel*.  
+Provide a meaningful name and description and save.
+
+![admin-func-name](docs/images/admin-func-name.png)
+
+⚠️ make sure you enable the function after you created it.
+
+![admin-func-enable](docs/images/admin-func-enable.png)
+
+#### OpenAI Token
+
+To get access to the OpenAI API, go to **Settings** > **Connections** and add your OpenAI API Token.
+
+![admin-connections](docs/images/admin-connections.png)
+
+### Workspace
+
+#### `gpt-4.1-mini-memory`
+
+Next we head to **Workspace** on the left menue and create a new model, which uses the Filter Function.
+
+![model-add1](docs/images/model-add1.png)
+
+1. Give it a name at the top
+1. select a base model
+1. make it public so that usual users can use it.
+
+![model-add2](docs/images/model-add2.png)
+
+Select the filter you just created.
+
+## ⚠️ Important Configuration Notes
 
 **1. Database Configuration Consistency**
 Make sure the database configuration details in `configuration.yml` match the database configuration details in `.env`
