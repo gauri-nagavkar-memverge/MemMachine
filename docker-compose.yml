@@ -34,8 +34,8 @@ services:
       NEO4J_EDITION: community
       NEO4J_AUTH: ${NEO4J_USER:-neo4j}/${NEO4J_PASSWORD:-neo4j_password}
       NEO4J_server_bolt_thread__pool__max__size: 2000
-      NEO4J_server_memory_heap_initial__size: 512m
-      NEO4J_server_memory_heap_max__size: 1G
+      NEO4J_server_memory_heap_initial__size: 8G
+      NEO4J_server_memory_heap_max__size: 12G
       NEO4J_server_default__listen__address: 0.0.0.0
       NEO4J_server_bolt_listen__address: 0.0.0.0:7687
       NEO4J_server_http_listen__address: 0.0.0.0:7474
@@ -58,9 +58,9 @@ services:
   # MemMachine application
   memmachine:
     #image: memmachine/memmachine:latest
-    build: 
-      context: .
-      dockerfile: Dockerfile
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
     image: 114147526645.dkr.ecr.us-east-1.amazonaws.com/memmachine/backend:2025-09-15.1
     restart: unless-stopped
     ports:
@@ -73,13 +73,13 @@ services:
       POSTGRES_PASS: ${POSTGRES_PASS:-memmachine_password}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-memmachine_password}
       POSTGRES_DB: ${POSTGRES_DB:-memmachine}
-      
+
       # Neo4j configuration
       NEO4J_HOST: ${NEO4J_HOST:-neo4j}
       NEO4J_PORT: ${NEO4J_PORT:-7687}
       NEO4J_USER: ${NEO4J_USER:-neo4j}
       NEO4J_PASSWORD: ${NEO4J_PASSWORD:-neo4j_password}
-      
+
       # Application configuration
       MEMORY_CONFIG: /etc/memmachine/configuration.yml
       MCP_BASE_URL: ${MCP_BASE_URL:-http://memmachine:8080}
@@ -116,13 +116,36 @@ services:
       - memmachine-network
     environment:
       ENV: PROD
-
+      WEBUI_AUTH: "true"
+      DEFAULT_USER_ROLE: "user"
+      DEFAULT_MODELS: "gpt-4o-mini"
+      ENABLE_SIGNUP: "true"
+      ENABLE_CODE_EXECUTION: "false"
+      #DATA_DIR: "/app/backend/data"
+      LOG_LEVEL: "INFO"
+      OPENID_PROVIDER_URL: ${OPENID_PROVIDER_URL:-https://accounts.google.com/o/oauth2/auth}
+      #DATABASE_URL: "sqlite:///app/backend/data/openwebui.db"
+      WEBUI_URL: ${WEBUI_URL:-http://localhost:3000}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-http://localhost:3000/oauth/google/callback}
+      ENABLE_OAUTH_SIGNUP: "true"
+      OAUTH_MERGE_ACCOUNTS_BY_EMAIL: "true"
+      ENABLE_USER_DELETION: "true"
+      USER_DELETION_DAYS: "14"
+      EXCLUDED_USERS_FROM_DELETION: "admin,admin@memverge.com"
+      RATE_LIMIT_ENABLED: "true"
+      RATE_LIMIT_REQUESTS_PER_MINUTE: "5"
+      RATE_LIMIT_REQUESTS_PER_HOUR: "50"
+      RATE_LIMIT_REQUESTS_PER_DAY: "100"
+      RATE_LIMIT_REQUESTS_PER_MONTH: "500"
+      RATE_LIMIT_BURST_SIZE: "5"
 
   middleware:
-    #image: 114147526645.dkr.ecr.us-east-1.amazonaws.com/memmachine/middleware:2025-09-15.1
-    build: 
-      context: ./examples
-      dockerfile: Dockerfile
+    image: 114147526645.dkr.ecr.us-east-1.amazonaws.com/memmachine/middleware:2025-09-15.1
+    # build:
+    #   context: ./examples
+    #   dockerfile: Dockerfile
     environment:
       - EXAMPLE_SERVER_PORT=8000
       - MEMORY_BACKEND_URL="http://memmachine:8080"
@@ -131,10 +154,10 @@ services:
     networks:
       - memmachine-network
   frontend:
-    #image: 114147526645.dkr.ecr.us-east-1.amazonaws.com/memmachine/frontend:2025-09-15.1
-    build: 
-      context: ./examples/frontend
-      dockerfile: Dockerfile
+    image: 114147526645.dkr.ecr.us-east-1.amazonaws.com/memmachine/frontend:2025-09-15.1
+    # build:
+    #   context: ./examples/frontend
+    #   dockerfile: Dockerfile
     environment:
       - MEMORY_BACKEND_URL="http://middleware:8000"
       - OPENAI_API_KEY=${OPENAI_API_KEY}
@@ -144,7 +167,7 @@ services:
       - "8501:8501"
     networks:
       - memmachine-network
-    
+
 
 volumes:
   postgres_data:
