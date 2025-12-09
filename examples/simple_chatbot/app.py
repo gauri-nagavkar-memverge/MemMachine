@@ -66,9 +66,9 @@ def ensure_session_state() -> None:
     )
     st.session_state.history = cast(
         list[dict],
-        st.session_state.sessions[
-            st.session_state.active_session_id
-        ].setdefault("history", []),
+        st.session_state.sessions[st.session_state.active_session_id].setdefault(
+            "history", []
+        ),
     )
 
 
@@ -225,7 +225,8 @@ def load_css() -> None:
 
 def render_header() -> None:
     """Render the MemMachine header with links."""
-    st.markdown("""
+    st.markdown(
+        """
     <div class="memmachine-header-wrapper">
       <div class="memmachine-header-links">
         <span class="powered-by">Powered by MemMachine</span>
@@ -244,7 +245,9 @@ def render_header() -> None:
         </a>
       </div>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
 
 def render_memory_status(memmachine_enabled: bool) -> None:
@@ -265,7 +268,8 @@ def render_memory_status(memmachine_enabled: bool) -> None:
 
 def render_comparison_banner() -> None:
     """Render the comparison feature banner."""
-    st.markdown("""
+    st.markdown(
+        """
     <div class="comparison-banner">
         <div class="comparison-banner-content">
             <span style="font-size: 1.5rem;">⚖️</span>
@@ -275,35 +279,45 @@ def render_comparison_banner() -> None:
             </div>
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
 
 def render_comparison_header() -> None:
     """Render the comparison header."""
-    st.markdown("""
+    st.markdown(
+        """
     <div class="comparison-header">
         <span class="comparison-header-icon">⚖️</span>
         <span>Side-by-Side Comparison</span>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
 
 def render_comparison_panel(
     label: str, response: str, is_memmachine: bool, is_new: bool
 ) -> None:
     """Render a comparison panel (MemMachine or Control)."""
-    panel_class = "comparison-panel-memmachine" if is_memmachine else "comparison-panel-control"
+    panel_class = (
+        "comparison-panel-memmachine" if is_memmachine else "comparison-panel-control"
+    )
     icon = "🧠" if is_memmachine else "⚪"
     title_class = "comparison-panel-title"
 
-    st.markdown(f"""
+    st.markdown(
+        f"""
     <div class="{panel_class}">
         <div class="comparison-panel-header">
             <span class="comparison-panel-icon">{icon}</span>
             <strong class="{title_class}">{label}</strong>
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
     if is_new:
         st.write_stream(typewriter_effect(response))
@@ -320,12 +334,15 @@ def render_session_list(active_session: str) -> None:
         button_col, menu_col = st.columns([0.8, 0.2])
 
         with button_col:
-            if st.button(
-                session_name,
-                key=f"session_button_{session_name}",
-                use_container_width=True,
-                type="primary" if is_active else "secondary",
-            ) and not is_active:
+            if (
+                st.button(
+                    session_name,
+                    key=f"session_button_{session_name}",
+                    use_container_width=True,
+                    type="primary" if is_active else "secondary",
+                )
+                and not is_active
+            ):
                 st.session_state.active_session_id = session_name
                 st.session_state.session_select = session_name
                 st.session_state.history = cast(
@@ -568,9 +585,7 @@ def render_memory_import_section(persona_name: str) -> None:
         col1, col2 = st.columns(2)
 
         with col1:
-            if st.button(
-                "👁️ Preview", use_container_width=True, key="preview_memories"
-            ):
+            if st.button("👁️ Preview", use_container_width=True, key="preview_memories"):
                 if imported_text and imported_text.strip():
                     st.session_state.memories_preview = imported_text
                     st.session_state.imported_memories_text = imported_text
@@ -595,7 +610,9 @@ def render_memory_import_section(persona_name: str) -> None:
                                     "They are now part of your memory system."
                                 )
                             else:
-                                st.error("❌ Failed to ingest memories. Please try again.")
+                                st.error(
+                                    "❌ Failed to ingest memories. Please try again."
+                                )
                     else:
                         st.warning("Please select a persona to ingest memories.")
                     st.rerun()
@@ -679,7 +696,10 @@ def render_chat_history() -> None:
                 control_label, control_response = content_items[1]
                 with cols[0]:
                     render_comparison_panel(
-                        persona_label, persona_response, is_memmachine=True, is_new=is_new
+                        persona_label,
+                        persona_response,
+                        is_memmachine=True,
+                        is_new=is_new,
                     )
                 with cols[1]:
                     st.markdown(
@@ -687,7 +707,10 @@ def render_chat_history() -> None:
                     )
                 with cols[2]:
                     render_comparison_panel(
-                        control_label, control_response, is_memmachine=False, is_new=is_new
+                        control_label,
+                        control_response,
+                        is_memmachine=False,
+                        is_new=is_new,
                     )
             else:
                 for label, response in content_items:
@@ -791,7 +814,9 @@ def main() -> None:
 
     # Sidebar configuration
     with st.sidebar:
-        persona_name, memmachine_enabled, compare_personas, show_rationale = render_sidebar()
+        persona_name, memmachine_enabled, compare_personas, show_rationale = (
+            render_sidebar()
+        )
 
     # Memory import section
     render_memory_import_section(persona_name)

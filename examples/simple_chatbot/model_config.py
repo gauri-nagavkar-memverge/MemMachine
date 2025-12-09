@@ -46,12 +46,16 @@ MODEL_TO_INFERENCE_PROFILE_ARN = {}
 # Claude Haiku 4.5
 haiku_arn = os.getenv("BEDROCK_HAIKU_4_5_ARN", "").strip()
 if haiku_arn:
-    MODEL_TO_INFERENCE_PROFILE_ARN["anthropic.claude-haiku-4-5-20251001-v1:0"] = haiku_arn
+    MODEL_TO_INFERENCE_PROFILE_ARN["anthropic.claude-haiku-4-5-20251001-v1:0"] = (
+        haiku_arn
+    )
 
 # Claude Sonnet 4.5
 sonnet_arn = os.getenv("BEDROCK_SONNET_4_5_ARN", "").strip()
 if sonnet_arn:
-    MODEL_TO_INFERENCE_PROFILE_ARN["anthropic.claude-sonnet-4-5-20250929-v1:0"] = sonnet_arn
+    MODEL_TO_INFERENCE_PROFILE_ARN["anthropic.claude-sonnet-4-5-20250929-v1:0"] = (
+        sonnet_arn
+    )
 
 # Claude Opus 4
 opus_arn = os.getenv("BEDROCK_OPUS_4_ARN", "").strip()

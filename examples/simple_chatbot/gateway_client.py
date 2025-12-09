@@ -63,11 +63,12 @@ def ingest_and_rewrite(user_id: str, query: str) -> str:
                     "producer": user_id,
                     "produced_for": "agent",
                     "role": "user",
-                    "timestamp": datetime.now(tz=UTC).isoformat().replace("+00:00", "Z"),
-                    "metadata": {
-                    }
+                    "timestamp": datetime.now(tz=UTC)
+                    .isoformat()
+                    .replace("+00:00", "Z"),
+                    "metadata": {},
                 }
-            ]
+            ],
         },
         timeout=5,
     )
@@ -103,8 +104,12 @@ def ingest_and_rewrite(user_id: str, query: str) -> str:
         long_term = episodic_memory.get("long_term_memory", {})
         short_term = episodic_memory.get("short_term_memory", {})
 
-        long_term_episodes = long_term.get("episodes", []) if isinstance(long_term, dict) else []
-        short_term_episodes = short_term.get("episodes", []) if isinstance(short_term, dict) else []
+        long_term_episodes = (
+            long_term.get("episodes", []) if isinstance(long_term, dict) else []
+        )
+        short_term_episodes = (
+            short_term.get("episodes", []) if isinstance(short_term, dict) else []
+        )
 
         all_episodes = []
         if isinstance(long_term_episodes, list):
@@ -114,13 +119,17 @@ def ingest_and_rewrite(user_id: str, query: str) -> str:
 
         for episode in all_episodes:
             if isinstance(episode, dict):
-                episode_content = episode.get("content") or episode.get("episode_content") or ""
+                episode_content = (
+                    episode.get("content") or episode.get("episode_content") or ""
+                )
                 if episode_content:
                     context_parts.append(episode_content)
     elif isinstance(episodic_memory, list):
         for episode in episodic_memory:
             if isinstance(episode, dict):
-                episode_content = episode.get("content") or episode.get("episode_content") or ""
+                episode_content = (
+                    episode.get("content") or episode.get("episode_content") or ""
+                )
                 if episode_content:
                     context_parts.append(episode_content)
 
@@ -128,11 +137,15 @@ def ingest_and_rewrite(user_id: str, query: str) -> str:
     if isinstance(semantic_memory, list):
         for memory in semantic_memory:
             if isinstance(memory, dict):
-                memory_content = memory.get("content") or memory.get("memory_content") or ""
+                memory_content = (
+                    memory.get("content") or memory.get("memory_content") or ""
+                )
                 if memory_content:
                     context_parts.append(memory_content)
 
-    context_str = "\n\n".join(context_parts) if context_parts else "No relevant context found."
+    context_str = (
+        "\n\n".join(context_parts) if context_parts else "No relevant context found."
+    )
 
     return PROMPT + "\n\n" + context_str + "\n\n" + "User Query: " + query
 
@@ -185,11 +198,12 @@ def ingest_memories(user_id: str, memories_text: str) -> bool:
                         "producer": user_id,
                         "produced_for": "agent",
                         "role": "user",
-                    "timestamp": datetime.now(tz=UTC).isoformat().replace("+00:00", "Z"),
-                    "metadata": {
+                        "timestamp": datetime.now(tz=UTC)
+                        .isoformat()
+                        .replace("+00:00", "Z"),
+                        "metadata": {},
                     }
-                    }
-                ]
+                ],
             },
             timeout=10,
         )

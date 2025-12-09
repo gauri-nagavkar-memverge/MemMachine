@@ -10,6 +10,7 @@ from model_config import MODEL_TO_INFERENCE_PROFILE_ARN, MODEL_TO_PROVIDER
 # Lazy initialization of Google Gemini client
 _google_client = None
 
+
 def get_google_client():
     """Get or create the Google Gemini client with proper error handling."""
     global _google_client
@@ -40,6 +41,7 @@ def get_google_client():
 
     return _google_client
 
+
 # ──────────────────────────────────────────────────────────────
 # Load environment variables
 load_dotenv()
@@ -55,6 +57,7 @@ client = openai.OpenAI(api_key=openai_api_key)
 
 # Lazy initialization of bedrock client to avoid errors if credentials are missing
 _bedrock_runtime = None
+
 
 def get_bedrock_client():
     """Get or create the Bedrock runtime client with proper error handling."""
@@ -77,7 +80,7 @@ def get_bedrock_client():
                 "bedrock-runtime",
                 region_name=aws_region,
                 aws_access_key_id=aws_access_key,
-                aws_secret_access_key=aws_secret_key
+                aws_secret_access_key=aws_secret_key,
             )
         except Exception as e:
             raise ValueError(
@@ -86,6 +89,7 @@ def get_bedrock_client():
             ) from e
 
     return _bedrock_runtime
+
 
 # ──────────────────────────────────────────────────────────────
 # Model switcher
@@ -115,13 +119,9 @@ def chat(messages, persona):
 
         # Prepare messages with system prompt
         chat_messages = [{"role": "system", "content": system_prompt}]
-        chat_messages.extend([
-            {
-                "role": msg["role"],
-                "content": msg["content"]
-            }
-            for msg in messages
-        ])
+        chat_messages.extend(
+            [{"role": msg["role"], "content": msg["content"]} for msg in messages]
+        )
 
         request_kwargs = {
             "model": MODEL_STRING,
@@ -187,14 +187,20 @@ def chat(messages, persona):
             raise
         except Exception as e:
             error_msg = str(e)
-            if "ValidationException" in error_msg and "model identifier is invalid" in error_msg:
+            if (
+                "ValidationException" in error_msg
+                and "model identifier is invalid" in error_msg
+            ):
                 raise ValueError(
                     f"Invalid Bedrock model ID: '{MODEL_STRING}'. "
                     f"Error: {error_msg}. "
                     "Please verify the model ID is correct and the model is available in your AWS region. "
                     "Common Claude model IDs: 'anthropic.claude-3-5-sonnet-20241022-v2' or 'anthropic.claude-3-haiku-20240307-v1'"
                 ) from e
-            if "UnrecognizedClientException" in error_msg or "invalid" in error_msg.lower():
+            if (
+                "UnrecognizedClientException" in error_msg
+                or "invalid" in error_msg.lower()
+            ):
                 raise ValueError(
                     f"AWS Bedrock authentication failed: {error_msg}. "
                     "Please verify your AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY secrets "
@@ -230,10 +236,7 @@ def chat(messages, persona):
                 # Gemini uses "model" instead of "assistant"
                 if role == "assistant":
                     role = "model"
-                chat_history.append({
-                    "role": role,
-                    "parts": [content]
-                })
+                chat_history.append({"role": role, "parts": [content]})
 
             # Separate history from the last user message
             if chat_history and chat_history[-1]["role"] == "user":
@@ -252,7 +255,7 @@ def chat(messages, persona):
                 generation_config=genai.types.GenerationConfig(
                     max_output_tokens=4000,
                     temperature=0.3,
-                )
+                ),
             )
 
             dt = time.time() - t0
@@ -267,7 +270,12 @@ def chat(messages, persona):
             raise
         except Exception as e:
             error_msg = str(e)
-            if "API key" in error_msg or "invalid" in error_msg.lower() or "401" in error_msg or "403" in error_msg:
+            if (
+                "API key" in error_msg
+                or "invalid" in error_msg.lower()
+                or "401" in error_msg
+                or "403" in error_msg
+            ):
                 raise ValueError(
                     f"Google API authentication failed: {error_msg}. "
                     "Please verify your GOOGLE_API_KEY secret is correct and has Gemini API access."
@@ -284,9 +292,7 @@ def chat(messages, persona):
         print("Using deepseek: ", MODEL_STRING)
         t0 = time.time()
 
-        system_prompt = (
-            ""
-        )
+        system_prompt = ""
 
         ds_messages = [
             {
@@ -326,13 +332,19 @@ def chat(messages, persona):
             raise
         except Exception as e:
             error_msg = str(e)
-            if "ValidationException" in error_msg and "model identifier is invalid" in error_msg:
+            if (
+                "ValidationException" in error_msg
+                and "model identifier is invalid" in error_msg
+            ):
                 raise ValueError(
                     f"Invalid Bedrock model ID: '{MODEL_STRING}'. "
                     f"Error: {error_msg}. "
                     "Please verify the model ID is correct and the model is available in your AWS region."
                 ) from e
-            if "UnrecognizedClientException" in error_msg or "invalid" in error_msg.lower():
+            if (
+                "UnrecognizedClientException" in error_msg
+                or "invalid" in error_msg.lower()
+            ):
                 raise ValueError(
                     f"AWS Bedrock authentication failed: {error_msg}. "
                     "Please verify your AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY secrets "
@@ -390,10 +402,10 @@ def chat(messages, persona):
     #         ),
     #     )
 
-        # dt = time.time() - t0
-        # body = json.loads(response["body"].read())
-        # text = body.get("generation", "").strip()
-        # total_tok = len(text.split())
+    # dt = time.time() - t0
+    # body = json.loads(response["body"].read())
+    # text = body.get("generation", "").strip()
+    # total_tok = len(text.split())
 
     #     return text, dt, total_tok, (total_tok / dt if dt else total_tok)
     # elif provider == "mistral":
@@ -497,12 +509,14 @@ def check_credentials():
             test_kwargs = {
                 "contentType": "application/json",
                 "accept": "application/json",
-                "body": json.dumps({
-                    "anthropic_version": "bedrock-2023-05-31",
-                    "messages": [{"role": "user", "content": "test"}],
-                    "max_tokens": 10,
-                    "temperature": 0.1
-                })
+                "body": json.dumps(
+                    {
+                        "anthropic_version": "bedrock-2023-05-31",
+                        "messages": [{"role": "user", "content": "test"}],
+                        "max_tokens": 10,
+                        "temperature": 0.1,
+                    }
+                ),
             }
 
             # Use inference profile ARN if available (use ARN as modelId for provisioned throughput)
@@ -516,7 +530,9 @@ def check_credentials():
             return True
         except Exception as e:
             print(f"Bedrock connection failed: {e}")
-            print("Make sure AWS credentials are configured and you have access to Bedrock")
+            print(
+                "Make sure AWS credentials are configured and you have access to Bedrock"
+            )
             return False
 
     # For OpenAI, check API key
