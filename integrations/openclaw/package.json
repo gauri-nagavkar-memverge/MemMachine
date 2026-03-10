@@ -30,7 +30,7 @@
   "dependencies": {
     "@memmachine/client": "^0.0.0-development",
     "@sinclair/typebox": "^0.34.48",
-    "openclaw": "^2026.2.6"
+    "openclaw": "^2026.3.2"
   },
   "devDependencies": {
     "tsup": "^8.5.0",
