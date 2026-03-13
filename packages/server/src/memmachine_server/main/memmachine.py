@@ -4,7 +4,7 @@ import asyncio
 import logging
 from asyncio import Task
 from collections.abc import Callable, Coroutine, Iterable, Mapping
-from typing import Any, Final, Protocol, cast
+from typing import Any, Final, Protocol
 
 from memmachine_common.api import MemoryType
 from pydantic import BaseModel, InstanceOf, JsonValue, ValidationError
@@ -547,7 +547,7 @@ class MemMachine:
         """
         session_data_manager = await self._resources.get_session_data_manager()
         return await session_data_manager.get_sessions(
-            filters=cast(dict[str, object] | None, to_property_filter(search_filter))
+            filters=to_property_filter(search_filter)
         )
 
     async def update_session_episodic_config(
