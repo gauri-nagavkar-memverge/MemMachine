@@ -38,7 +38,8 @@
               {
                 "group": "Cloud Deployments",
                 "pages": [
-                  "install_guide/cloud_deploy/aws_cloudformation"
+                  "install_guide/cloud_deploy/aws_cloudformation",
+                  "install_guide/cloud_deploy/Helm_Chart"
                 ]
               },  
               {
