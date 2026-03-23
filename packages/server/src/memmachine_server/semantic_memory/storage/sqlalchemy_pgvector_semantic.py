@@ -2,7 +2,7 @@
 
 import logging
 from pathlib import Path
-from typing import Any, overload
+from typing import Any, cast, overload
 
 import numpy as np
 from alembic import command
@@ -19,17 +19,15 @@ from sqlalchemy import (
     Integer,
     String,
     Table,
-    and_,
     delete,
     insert,
-    or_,
     select,
     text,
     union,
     update,
 )
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.engine import Connection
+from sqlalchemy.engine import Connection, CursorResult
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import (
     DeclarativeBase,
@@ -163,6 +161,10 @@ class SetIngestedHistory(BaseSemanticStorage):
         server_default=func.now(),
     )
     ingested = mapped_column(Boolean, default=False, nullable=False)
+
+    __table_args__ = (
+        Index("ix_set_ingested_history_set_id_ingested", "set_id", "ingested"),
+    )
 
 
 async def apply_alembic_migrations(engine: AsyncEngine) -> None:
@@ -687,42 +689,67 @@ class SqlAlchemyPgVectorSemanticStorage(SemanticStorage):
         min_uningested_messages: int | None = None,
         older_than: AwareDatetime | None = None,
     ) -> list[SetIdT]:
-        stmt = select(SetIngestedHistory.set_id).distinct()
-
-        conditions = []
+        subqueries: list[Select] = []
 
         if min_uningested_messages is not None and min_uningested_messages > 0:
-            inner = aliased(SetIngestedHistory)
-
-            count_uningested = (
-                select(func.count(inner.set_id))
-                .where(
-                    inner.set_id == SetIngestedHistory.set_id,  # correlate on set_id
-                    inner.ingested.is_(False),
-                )
-                .scalar_subquery()
+            uningested_subq = (
+                select(SetIngestedHistory.set_id)
+                .where(SetIngestedHistory.ingested.is_(False))
+                .group_by(SetIngestedHistory.set_id)
+                .having(func.count() >= min_uningested_messages)
             )
-
-            conditions.append(count_uningested >= min_uningested_messages)
+            subqueries.append(uningested_subq)
 
         if older_than is not None:
-            conditions.append(
-                and_(
-                    SetIngestedHistory.created_at <= older_than,
+            older_subq = (
+                select(SetIngestedHistory.set_id)
+                .where(
                     SetIngestedHistory.ingested.is_(False),
+                    SetIngestedHistory.created_at <= older_than,
                 )
+                .distinct()
             )
+            subqueries.append(older_subq)
 
-        if len(conditions) == 1:
-            stmt = stmt.where(conditions[0])
-        elif len(conditions) > 1:
-            stmt = stmt.where(or_(*conditions))
+        if not subqueries:
+            # No filters: return all distinct set_ids
+            stmt = select(SetIngestedHistory.set_id).distinct()
+        elif len(subqueries) == 1:
+            stmt = subqueries[0]
+        else:
+            # OR semantics: union the subqueries
+            stmt = union(*subqueries)
 
         async with self._create_session() as session:
             result = await session.execute(stmt)
             set_ids = result.scalars().all()
 
         return TypeAdapter(list[SetIdT]).validate_python(set_ids)
+
+    async def purge_ingested_rows(self, set_ids: list[SetIdT]) -> int:
+        if not set_ids:
+            return 0
+        # Only purge set_ids where no uningested rows remain, so the
+        # (set_id, history_id) duplicate guard stays intact for pending sets.
+        pending_alias = aliased(SetIngestedHistory)
+        pending_exists = (
+            select(pending_alias.set_id)
+            .where(
+                pending_alias.set_id == SetIngestedHistory.set_id,
+                pending_alias.ingested.is_(False),
+            )
+            .correlate(SetIngestedHistory)
+            .exists()
+        )
+        stmt = delete(SetIngestedHistory).where(
+            SetIngestedHistory.set_id.in_(set_ids),
+            SetIngestedHistory.ingested.is_(True),
+            ~pending_exists,
+        )
+        async with self._create_session() as session:
+            result = cast(CursorResult[Any], await session.execute(stmt))
+            await session.commit()
+            return result.rowcount
 
     async def get_set_ids_starts_with(self, prefix: str) -> list[SetIdT]:
         stmt = union(
